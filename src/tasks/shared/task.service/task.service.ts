@@ -1,59 +1,36 @@
 import { Injectable } from '@nestjs/common';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 import { Task } from '../task/task';
 
 @Injectable()
 export class TaskService {
-    tasks: Task[] = [
-        { id: 1, description: 'Task 1', completed: false },
-        { id: 2, description: 'Task 2', completed: false },
-        { id: 3, description: 'Task 3', completed: false },
-        { id: 4, description: 'Task 4', completed: false },
-        { id: 5, description: 'Task 5', completed: false },
-        { id: 6, description: 'Task 6', completed: false },
-        { id: 7, description: 'Task 7', completed: false },
-        { id: 8, description: 'Task 8', completed: false },
-        { id: 9, description: 'Task 9', completed: false }
-    ]
+    constructor(@InjectModel('Task') private readonly taskModel: Model<Task>) {
 
-    getAll() {
-        return this.tasks
     }
 
-    getById(id: number) {
-        const task = this.tasks.find((value) => value.id == id)
-        return task
+    async getAll() {
+        return await this.taskModel.find().exec()
     }
 
-    create(task: Task) {
-        let lastId = 0
-
-        if (this.tasks.length > 0) {
-            lastId = this.tasks[this.tasks.length - 1].id
-        }
-
-        task.id = lastId + 1
-        task.description = `Task ${lastId + 1}`
-        this.tasks.push(task)
-
-        return task
+    async getById(id: string) {
+        return await this.taskModel.findById(id).exec()
     }
 
-    update(task: Task) {
-        const taskArray = this.getById(task.id)
-
-        if (taskArray) {
-            taskArray.description = task.description
-            taskArray.completed = task.completed
-        }
-
-        return taskArray
+    async create(task: Task) {
+        const createdTask = new this.taskModel(task)
+        return await createdTask.save()
     }
 
-    delete(id: number) {
-        const index = this.tasks.findIndex((value) => value.id == id)
-        this.tasks.splice(index, 1)
+    async update(id: string, task: Task) {
+        await this.taskModel.updateOne({ _id: id }, task).exec()
+        return this.getById(id)
+    }
+
+    async delete(id: string) {
+        return await this.taskModel.deleteOne({ _id: id })
 
     }
 
 
-}
+} ''
